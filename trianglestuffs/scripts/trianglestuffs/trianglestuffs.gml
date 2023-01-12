@@ -187,20 +187,27 @@ function trianglestuffs_form_mesh(points, super, convert = false) {
 					}
 				}
 			}
+			//AUTHOR'S NOTE if you are getting errors uncomment the validations
 			if (eu0) {
 				var pb = discard[| j].edges[0].a;
 				var pc = discard[| j].edges[0].b;
-				ds_list_add(triangles, new trianglestuffs_triangle(origin, pb, pc));
+				//if (trianglestuffs_validate_triangle(origin, pb, pc)) {
+					ds_list_add(triangles, new trianglestuffs_triangle(origin, pb, pc));
+				//}
 			}
 			if (eu1) {
 				var pb = discard[| j].edges[1].a;
 				var pc = discard[| j].edges[1].b;
-				ds_list_add(triangles, new trianglestuffs_triangle(origin, pb, pc));
+				//if (trianglestuffs_validate_triangle(origin, pb, pc)) {
+					ds_list_add(triangles, new trianglestuffs_triangle(origin, pb, pc));
+				//}
 			}
 			if (eu2) {
 				var pb = discard[| j].edges[2].a;
 				var pc = discard[| j].edges[2].b;
-				ds_list_add(triangles, new trianglestuffs_triangle(origin, pb, pc));
+				//if (trianglestuffs_validate_triangle(origin, pb, pc)) {
+					ds_list_add(triangles, new trianglestuffs_triangle(origin, pb, pc));
+				//}
 			}
 		}
 	}
