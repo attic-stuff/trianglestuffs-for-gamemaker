@@ -4,7 +4,7 @@
 
 
 
-this repository is home to a set of functions and constructors for gamemaker making language to triangulations and triangulation related things. you are free to use this code (not the font or the art if there is any) just know that it comes without support or warranty. you are on your own!
+this repository is home to a set of functions and constructors for gamemaker making language triangulations and triangulation related things. you are free to use this code (not the font or the art if there is any) just know that it comes without support or warranty. you are on your own!
 
 whats so cool about this? well it does a delaunay triangulation on a set of points, which is the sort of Sick Ass Kickflip triangulation of the game development world because it makes sure that no point on any triangle lies inside any other triangle. this allows you to create viable meshes for whatever you want: screen shatter effects, destructible terrain, weird triangle art. whatever you want friend as long as it requires one (1) or more triangles. read more: [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation), [bowyer-watson algorithm](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm), [convex hulls](https://en.wikipedia.org/wiki/Convex_hull_algorithms).
 
