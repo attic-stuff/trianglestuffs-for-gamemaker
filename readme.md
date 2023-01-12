@@ -26,6 +26,6 @@ this constructor is kind of special, as it is not just a list of points in a tri
 
 ### the example
 
-all of this really cool code is in a project yyz that demonstrates everything working together. it looks like this:![logo](C:\Users\cecil\Desktop\work\GM REPOs\trianglestuffs-for-gamemaker\logo.png)
+all of this really cool code is in a project yyz that demonstrates everything working together. it looks like this:![logo](https://github.com/attic-stuff/trianglestuffs-for-gamemaker/blob/main/logo.png)
 
 go ahead and run it! left click the screen to place a point, right click it to delete it. when there are three or more points on screen both a convex hull (in black) and a set of triangles (in blue) will be calculated in real time. you can press t to turn triangle calculating on or off, and you can press h to turn hull calculating on and off. you can press tab to yeet the whole thing. **note**: this can, with enough points, be quite a time consuming process. so there is a calculation time that shows how many milliseconds the calculation took. so if you add a point, it calculates the triangle and tells you how long that calculation took. you may want to play with running this using yyc, as well as both ds list and array versions of the triangle mesh.
