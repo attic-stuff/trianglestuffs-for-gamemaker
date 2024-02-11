@@ -2,7 +2,7 @@
 
 ### for gamemakering
 
-
+--THIS REPO IS GUNNA GET REWRITTEN SOON--
 
 this repository is home to a set of functions and constructors for gamemaker making language triangulations and triangulation related things. you are free to use this code (not the font or the art if there is any) just know that it comes without support or warranty. you are on your own!
 
