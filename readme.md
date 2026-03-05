@@ -1,11 +1,15 @@
 # trianglestuffs
 
 ### for gamemakering
+a gamemaker library for triangulating a set of points using the [bowyer-watson](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm) algorithm. suitable for all yer screen shattering, mesh making, and terrain deforming gamemaker needs. make stuff that looks like this:  
 
-a gamemaker library for triangulating a set of points using the [bowyer-watson](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm) algorithm. suitable for all yer screen shattering, mesh making, and terrain deforming gamemaker needs!
+![example](https://github.com/attic-stuff/trianglestuffs-for-gamemaker/blob/main/example.png)  
+
+### how to use
+you can download the yyz file and open it to see an example of this library in action, or download the trianglestuffs_backend.gml file and drag it to your project in the ide, or copy and paste the contents of the gml file to a new script asset in your project.
 
 ### data structures:
-|trianglestufs_vertex(x, y)|
+|trianglestuffs_vertex(x, y)|
 |:-------------------------|
 | contains the position information of a triangle vertex |
 | **x**: the vertex's x position |
@@ -93,9 +97,6 @@ var set_of_points = [
 ]
 var hull_thing = trianglestuffs_get_convex_hull(set_of_points);
 ```
-
-![example](https://github.com/attic-stuff/trianglestuffs-for-gamemaker/blob/main/example.png)
-
 
 ### license
 this source is provided without warranty. you are free to use and remix the provided code however you like, without attribution. you may not use the font included in the yyz file for any reason. its called [textmachine](https://polyducks.itch.io/textmachine-handwriting-font) by polyducks and it rules.
