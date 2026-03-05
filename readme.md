@@ -1,63 +1,101 @@
-# triangle stuffs
+# trianglestuffs
 
 ### for gamemakering
 
---THIS REPO IS GUNNA GET REWRITTEN SOON--
+a gamemaker library for triangulating a set of points using the [bowyer-watson](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm) algorithm. suitable for all yer screen shattering, mesh making, and terrain deforming gamemaker needs!
 
-this repository is home to a set of functions and constructors for gamemaker making language triangulations and triangulation related things. you are free to use this code (not the font or the art if there is any) just know that it comes without support or warranty. you are on your own!
+### data structures:
+|trianglestufs_vertex(x, y)|
+|:-------------------------|
+| contains the position information of a triangle vertex |
+| **x**: the vertex's x position |
+| **y**: the vertex's y position |  
 
-whats so cool about this? well it does a delaunay triangulation on a set of points, which is the sort of Sick Ass Kickflip triangulation of the game development world because it makes sure that no point on any triangle lies inside any other triangle. this allows you to create viable meshes for whatever you want: screen shatter effects, destructible terrain, weird triangle art. whatever you want friend as long as it requires one (1) or more triangles. read more: [delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation), [bowyer-watson algorithm](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm), [convex hulls](https://en.wikipedia.org/wiki/Convex_hull_algorithms).
+_methods:_  
+> equals_vertex(other_vertex)  
 
-### the example
+_example:_
+```js
+array_push(point_set, new trianglestuffs_vertex(4, 20));
+```
 
-![logo](https://github.com/attic-stuff/trianglestuffs-for-gamemaker/blob/main/logo.png)
+|trianglestuffs_edge(vertex_a, vertex_b) |
+|:---------------------------------------|
+| contains the edge, or line segment, information of one side of a triangle |
+| **vertex_a**: the first vertex of the line segment |
+| **vertex_b**: the second vertex of the line segment |
 
-all of this really cool code is in a project yyz that demonstrates everything working together. go ahead and run it! left click the screen to place a point, right click it to delete it. when there are three or more points on screen both a convex hull (in black) and a set of triangles (in blue) will be calculated in real time. you can press t to turn triangle calculating on or off, and you can press h to turn hull calculating on and off. you can press tab to yeet the whole thing. **note**: this can, with enough points, be quite a time consuming process. so there is a calculation time that shows how many milliseconds the calculation took. so if you add a point, it calculates the triangle and tells you how long that calculation took. you may want to play with running this using yyc, as well as both ds list and array versions of the triangle mesh.
+_methods:_  
+> equals_edge(other_edge)  
+> get_line_equation()  
+> get_perpindicular_line_equation()
 
-### stuffs:
+_example:_
+```js
+var point_a = new trianglestuffs_vertex(4, 20);
+var point_b = new trianglestuffs_vertex(6, 9);
+var triangle_edge = new trianglestuffs_edge(point_a, point_b);
+```
 
-| trianglestuffs_point(x, y)                                   |
-| :----------------------------------------------------------- |
-| a constructor for making a new point in space.               |
-| **x**: the x coordinate of the point<br />**y**: the y coordinate of the point |
-| returns a constructor                                        |
+|trianglestuffs_triangle(vertex_a, vertex_b, vertex_c) |
+|:-----------------------------------------------------|
+|contains the vertex information of a triangle, as well as information such as the circumcircle, centroid, and circumradius. |
+| **vertex_a**: first vertex of the triangle |
+| **vertex_b**: second vertex of the triangle |
+| **vertex_c**: third vertex of the triangle |
 
-| trianglestuffs_edge(a, b)                                    |
-| :----------------------------------------------------------- |
-| a constructor that creates an edge, or rather a line segment between two sets of trianglestuffs points. |
-| **a**: trianglestuffs point a on the edge line<br />**b**: trianglestuffs point b on the edge line |
-| returns a constructor                                        |
+_methods:_  
+> vertex_in_circumcircle(vertex)  
+> fetch_barycentric_coordinates(x, y, sorting)
 
-| trianglestuffs_triangle(a, b, c)                             |
-| :----------------------------------------------------------- |
-| a constructor that creates a triangle from three trianglestuffs points. the section below talks a bit more about this one. |
-| **a**: trianglestuffs point a on the edge line<br />**b**: trianglestuffs point b on the edge line |
-| returns a constructor                                        |
+_example:_
+```js
+var point_a = new trianglestuffs_vertex(4, 20);
+var point_b = new trianglestuffs_vertex(6, 9);
+var point_c = new triangle_stuffs_vertex(1, 13)
+var whole_ass_triangle = new trianglestuffs_triangle(point_a, point_b, point_c);
+```
+### functions
+|trianglestuffs_get_triangulation(point_set) |
+|:-------------------------------------------|
+|calculates the delaunay triangulation of a set of points. returns an array of trianglestuff_triangle structs |
+| **point_set**: an array of trianglestuff_vertex structs what need triangulating |
 
-| trianglestuffs_create_super_triangle(x1, y1, x2, y2)         |
-| :----------------------------------------------------------- |
-| a super triangle is used in bowyer-watson triangulation, and this constructor makes that. this function takes the upper left and lower right corner of a rectangle as arguments—this rectangle should encompass all of your trianglestuffs points you wish to include in the triangulation. |
-| **x1**: the lowest x axis point of the rectangle (left)<br />**y1**: the lowest y axis point of the rectangle (top)<br />**x2**: the highest x axis point of the rectangle (right)<br />**y2**: the highest y axis point of the rectangle (bottom) |
-| returns a constructor                                        |
+_example:_
+```js
+var set_of_points = [
 
-| trianglestuffs_validate_triangle(a, b, c)                    |
-| :----------------------------------------------------------- |
-| validates a proper triangle, however this is unused in the codebase right now. if you get sqrt errors when making your triangle you will need to implement this into the mesh code. |
-| **a**: trianglestuffs point a of the triangle<br />**b**: trianglestuffs point b of the triangle<br />**c**: trianglestuffs point c of the triangle |
-| returns true/false                                           |
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
 
-| trianglestuffs_form_mesh(points, super, [convert])           |
-| :----------------------------------------------------------- |
-| where the magic happens! this is a gml implementation of the bowyet-watson algorithm. it takes a set of points and triangulates them into delaunay triangles which is very nice and pleasant; it returns a ds list of triangles, but optionally you may have it convert that ds list to an array. |
-| **points**: the array of trianglestuffs points to triangulate<br />**super**: the super triangle used in the triangulation method<br />**[convert]**: optional argument to convert the returned ds list into an array. turning this on will have a performance impact! |
-| returns a ds list of constructors                            |
+]
+var mesh_you_up = trianglestuffs_get_triangulation(set_of_points);
+```
 
-| trianglestuffs_form_convex_hull(points, [wrap])              |
-| :----------------------------------------------------------- |
-| this returns an array of trianglestuffs points that form the convex hull of your set of original points. the algorithm used is the monotone chain one. neat! |
-| **points**: the array of trianglestuffs points to form a hull around<br />**wrap**: optional argument that duplicates the first point on the hull in the last position of the array, making it a smidge easier to draw the thing |
-| returns an array of constructors                             |
+|trianglestuffs_get_convex_hull(point_set) |
+|:-------------------------------------------|
+|calculates the convex hull of a set of trianglestuff_vertex points |
+| **point_set**: an array of trianglestuff_vertex structs to wrap the hull around |
 
-### the trianglestuffs triangle
+_example:_
+```js
+var set_of_points = [
 
-this constructor is kind of special, as it is not just a list of points in a triangle. this triangle is aware of its edges, its circumcenter, its circumradius, and its centroid. that's a lot of C words_!_. the **circumcenter** is the center of a circle that goes around a whole triangle. each of the three points on the triangle lie on this circle. the **circumradius** is the radius of that circle, aka ol' dirty line from the circumcenter to the circle's edge.  the **centroid** is the center point of the triangle. these things can be useful for generating your own polygons, but, *but* the circumradius of a triangle is a really neat thing you can use to calculate a voronoi diagram. that can be very useful for many game development things or tech art things. this library is unconcerned with voronoi diagram, but it is possible to computer the voronoi diagram of your set of triangles using the information stored in the triangle constructor.
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+
+]
+var hull_thing = trianglestuffs_get_convex_hull(set_of_points);
+```
+
+![example](https://github.com/attic-stuff/trianglestuffs-for-gamemaker/blob/main/example.png)
+
+
+### license
+this source is provided without warranty. you are free to use and remix the provided code however you like, without attribution. you may not use the font included in the yyz file for any reason. its called [textmachine](https://polyducks.itch.io/textmachine-handwriting-font) by polyducks and it rules.

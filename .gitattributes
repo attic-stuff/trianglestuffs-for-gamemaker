@@ -1,4 +1,15 @@
-# Auto detect text files and perform LF normalization
-* text=auto
-*.yy  linguist-language=Json
+# Ignore .yy files for language statistics
+*.yy linguist-generated=true
+ 
+# force LF for metadata files for merge simplicity
+*.gml text eol=lf
+*.yy text eol=lf
+*.yyp text eol=lf
+*.json text eol=lf
+*.fsh text eol=lf
+*.vsh text eol=lf
+
+*.yy linguist-language=Json
 *.yyp linguist-language=Json
+*.fsh linguist-language=GLSL
+*.vsh linguist-language=GLSL
