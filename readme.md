@@ -156,5 +156,8 @@ var clip_plane = {
 edge_set = trianglestuffs_get_voronoi_edges(mesh_you_up, clip_plane);
 ```
 
-### license
-this source is provided without warranty. you are free to use and remix the provided code however you like, without attribution. you may not use the font included in the yyz file for any reason. its called [textmachine](https://polyducks.itch.io/textmachine-handwriting-font) by polyducks and it rules.
+### common sense licensing.
+by using the contents of this repository you agree to the following terms:
+- you may use this codebase in any paid or free project you see fit as long as there is no conflict with the terms of this license; no attribution required, needed, or wanted.
+- you may modify, change, transform, or otherwise modify the contents of this codebase to meet your needs
+- all licensing terms associated with any included assets must be followed and take complete precedence over the general terms stated here.
