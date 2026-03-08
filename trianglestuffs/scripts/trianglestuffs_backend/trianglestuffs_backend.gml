@@ -1,3 +1,5 @@
+#macro trianglestuffs_voronoi_infinity 1000000
+
 /**
  * triangle vertex data structure
  * @param {real} x vertex x coordinate
@@ -341,6 +343,9 @@ function trianglestuffs_get_convex_hull(point_set) {
  * @returns {struct.trianglestuffs_vertex}
  */
 function trianglestuffs_get_line_intersect(line_a, line_b) {
+	
+	static non_intersecting_line = new trianglestuffs_vertex(infinity, infinity);
+	
 	var a1 = line_a.a;
 	var b1 = line_a.b;
 	var c1 = line_a.c;
@@ -354,7 +359,42 @@ function trianglestuffs_get_line_intersect(line_a, line_b) {
 	var intersection_x = (b2 * c1 - b1 * c2) / cramer_determinant;
 	var intersection_y = (a1 * c2 - a2 * c1) / cramer_determinant;
 	
+	if (is_nan(intersection_x) == true or is_nan(intersection_y) == true or is_infinity(intersection_x) == true or is_infinity(intersection_y) == true) {
+		return non_intersecting_line;
+	}
+	
 	return new trianglestuffs_vertex(intersection_x, intersection_y);	
+}
+
+/**
+ * determine the intersection point of line segments
+ * @param {struct} line_a line segment one
+ * @param {struct} line_b line segment two
+ */
+function trianglestuffs_get_line_segment_intersect(line_a, line_b) {
+	
+	static non_intersecting_line = new trianglestuffs_vertex(infinity, infinity);
+	
+	var vertex_a = line_a.vertex_a;
+	var vertex_b = line_a.vertex_b;
+	var vertex_c = line_b.vertex_a;
+	var vertex_d = line_b.vertex_b;
+	
+	if ((vertex_a.x == vertex_b.x and vertex_a.y == vertex_b.y) or (vertex_c.x == vertex_d.x and vertex_c.y == vertex_d.y)) {
+		return non_intersecting_line;
+	}
+	
+	var denominator = (vertex_d.y - vertex_c.y) * (vertex_b.x - vertex_a.x) - (vertex_d.x - vertex_c.x) * (vertex_b.y - vertex_a.y);
+	
+	var numerator_a = ((vertex_d.x - vertex_c.x) * (vertex_a.y - vertex_c.y) - (vertex_d.y - vertex_c.y) * (vertex_a.x - vertex_c.x)) / denominator;
+	var numerator_b = ((vertex_b.x - vertex_a.x) * (vertex_a.y - vertex_c.y) - (vertex_b.y - vertex_a.y) * (vertex_a.x - vertex_c.x)) / denominator;
+	
+	if (denominator == 0 or numerator_a < 0 or numerator_a > 1 or numerator_b < 0 or numerator_b > 1) {
+		return non_intersecting_line;
+	}
+	
+	return new trianglestuffs_vertex(vertex_a.x + numerator_a * (vertex_b.x - vertex_a.x), vertex_a.y + numerator_a * (vertex_b.y - vertex_a.y));
+	
 }
 
 /**
@@ -398,18 +438,296 @@ function trianglestuffs_create_super_triangle(point_set) {
  * @param {array<struct.trianglestuffs_triangle>} triangulation the triangulation belonging to this voronoi graph
  * @returns {array<real>}
  */
-function trianglestuffs_get_voronoi_points_flattened(triangulation) {
+function trianglestuffs_get_voronoi_seeds_flattened(triangulation) {
 
 	var triangle_count = array_length(triangulation);
-	var voronoi_points = array_create(triangle_count * 2, undefined);
+	var voronoi_seeds = []
+	var visited_vertices = [];
 	
-	for (var index = 0; index < triangle_count; index = index + 1) {
-		var array_offset = index * 2;
-		var this_point = triangulation[index].circumcenter;
-		voronoi_points[array_offset + 0] = this_point.x;
-		voronoi_points[array_offset + 1] = this_point.y;
+	for (var triangle_index = array_length(triangulation) - 1; triangle_index > -1; triangle_index = triangle_index - 1) {
+		var this_triangle = triangulation[triangle_index];
+		
+		var vertex_a_unique = true;
+		var vertex_b_unique = true;
+		var vertex_c_unique = true;
+		
+		for (var vertex_index = array_length(visited_vertices) - 1; vertex_index > -1; vertex_index = vertex_index - 1) {
+			
+			if (vertex_a_unique == false and vertex_b_unique == false and vertex_c_unique == false) {
+				break;
+			}
+			
+			var this_vertex = visited_vertices[vertex_index];
+			
+			if (this_triangle.vertex_a.equals_vertex(this_vertex) == true) {
+				vertex_a_unique = false;
+			}
+			
+			if (this_triangle.vertex_b.equals_vertex(this_vertex) == true) {
+				vertex_b_unique = false;
+			}
+			
+			if (this_triangle.vertex_c.equals_vertex(this_vertex) == true) {
+				vertex_c_unique = false;
+			}
+			
+		}
+		
+		if (vertex_a_unique == true) {
+			array_push(voronoi_seeds, this_triangle.vertex_a.x, this_triangle.vertex_a.y);
+			array_push(visited_vertices, this_triangle.vertex_a);
+		}
+		
+		if (vertex_b_unique == true) {
+			array_push(voronoi_seeds, this_triangle.vertex_b.x, this_triangle.vertex_b.y);
+			array_push(visited_vertices, this_triangle.vertex_b);
+		}
+
+		if (vertex_c_unique == true) {
+			array_push(voronoi_seeds, this_triangle.vertex_c.x, this_triangle.vertex_c.y);
+			array_push(visited_vertices, this_triangle.vertex_c);
+		}
+				
 	}
 	
-	return voronoi_points;
+	return voronoi_seeds;
+	
+}
+
+/**
+ * returns an array of voronoi cell edges from the triangulation. infinite edges extend by trianglestuffs_voronoi_infinity
+ * @param {array<struct.trianglestuff_triangle>} triangulation the triangulation
+ * @param {struct} [clipping_plane] struct of left, top, right, and bottom clip points
+ * @returns {array<struct.trianglestuff_edge>}
+ */
+function trianglestuffs_get_voronoi_edges(triangulation, clipping_plane = undefined) {
+	
+	var number_of_triangles = array_length(triangulation);
+	if (number_of_triangles == 0) {
+		return [];
+	}
+	
+	var edge_set = [];
+	
+	for (var outer_index = 0; outer_index < number_of_triangles; outer_index = outer_index + 1;) {
+		
+		var this_triangle = triangulation[outer_index];
+		var outer_edge_a = this_triangle.edge_list[0];
+		var outer_edge_b = this_triangle.edge_list[1];
+		var outer_edge_c = this_triangle.edge_list[2];
+		
+		var a_is_boundary = true;
+		var b_is_boundary = true;
+		var c_is_boundary = true;
+		
+		for (var inner_index = 0; inner_index < number_of_triangles; inner_index = inner_index + 1;) { 
+			
+			var that_triangle = triangulation[inner_index];
+			var adjacent = false;
+			
+			if (a_is_boundary == false and b_is_boundary == false and c_is_boundary == false) {
+				break;
+			}
+			
+			if (this_triangle == that_triangle) {
+				continue;
+			}
+			
+			var inner_edge_a = that_triangle.edge_list[0];
+			var inner_edge_b = that_triangle.edge_list[1];
+			var inner_edge_c = that_triangle.edge_list[2];
+			
+			if (a_is_boundary == true and (outer_edge_a.equals_edge(inner_edge_a) == true or outer_edge_a.equals_edge(inner_edge_b) == true or outer_edge_a.equals_edge(inner_edge_c) == true)) {
+				a_is_boundary = false;
+				adjacent = true;
+			}
+			
+			if (b_is_boundary == true and (outer_edge_b.equals_edge(inner_edge_a) == true or outer_edge_b.equals_edge(inner_edge_b) == true or outer_edge_b.equals_edge(inner_edge_c) == true)) {
+				b_is_boundary = false;
+				adjacent = true;
+			}
+			
+			if (c_is_boundary == true and (outer_edge_c.equals_edge(inner_edge_a) == true or outer_edge_c.equals_edge(inner_edge_b) == true or outer_edge_c.equals_edge(inner_edge_c) == true)) {
+				c_is_boundary = false;
+				adjacent = true;
+			}
+			
+			if (adjacent == true) {
+				
+				var bisecting_edge = new trianglestuffs_edge(this_triangle.circumcenter, that_triangle.circumcenter);
+				var edge_index = -1;
+				for (edge_index = array_length(edge_set) - 1; edge_index > -1; edge_index = edge_index -1;) {
+					if (bisecting_edge.equals_edge(edge_set[edge_index]) == true) {
+						break;
+					}
+				}
+				if (edge_index == -1) {
+					array_push(edge_set, bisecting_edge);
+				}
+				
+			}
+		}
+		
+		var inscribed_circumcenter = true;
+		with (this_triangle) {
+			inscribed_circumcenter = point_in_triangle(circumcenter.x, circumcenter.y, self.vertex_a.x, self.vertex_a.y, self.vertex_b.x, self.vertex_b.y, vertex_c.x, vertex_c.y);
+		}
+		
+		
+		if (a_is_boundary == true) {
+			
+			var this_edge = this_triangle.edge_list[0];
+			var this_circumcenter = this_triangle.circumcenter;
+			
+			var midpoint_x = (this_edge.vertex_a.x + this_edge.vertex_b.x) * 0.5;
+			var midpoint_y = (this_edge.vertex_a.y + this_edge.vertex_b.y) * 0.5;
+			
+			var bisection_angle = point_direction(this_circumcenter.x, this_circumcenter.y, midpoint_x, midpoint_y);
+			if (inscribed_circumcenter == false) {
+				with (this_edge) {
+					var side_of_line = sign((self.vertex_b.x - self.vertex_a.x) * (this_circumcenter.y - self.vertex_a.y) - (self.vertex_b.y - self.vertex_a.y) * (this_circumcenter.x - self.vertex_a.x));
+					if (side_of_line == -1) {
+						bisection_angle = bisection_angle - 180;
+					}
+				}
+				
+			}
+			
+			var endpoint = new trianglestuffs_vertex(this_circumcenter.x + lengthdir_x(trianglestuffs_voronoi_infinity, bisection_angle), this_circumcenter.y + lengthdir_y(trianglestuffs_voronoi_infinity, bisection_angle));
+			var voronoi_edge = new trianglestuffs_edge(this_circumcenter, endpoint);
+			
+			array_push(edge_set, voronoi_edge);
+			
+		}
+
+		if (b_is_boundary == true) {
+			
+			var this_edge = this_triangle.edge_list[1];
+			var this_circumcenter = this_triangle.circumcenter;
+			
+			var midpoint_x = (this_edge.vertex_a.x + this_edge.vertex_b.x) * 0.5;
+			var midpoint_y = (this_edge.vertex_a.y + this_edge.vertex_b.y) * 0.5;
+			
+			var bisection_angle = point_direction(this_circumcenter.x, this_circumcenter.y, midpoint_x, midpoint_y);
+			if (inscribed_circumcenter == false) {
+				
+				with (this_edge) {
+					var side_of_line = sign((self.vertex_b.x - self.vertex_a.x) * (this_circumcenter.y - self.vertex_a.y) - (self.vertex_b.y - self.vertex_a.y) * (this_circumcenter.x - self.vertex_a.x));
+					if (side_of_line == -1) {
+						bisection_angle = bisection_angle - 180;
+					}
+				}
+				
+			}
+			
+			var endpoint = new trianglestuffs_vertex(this_circumcenter.x + lengthdir_x(trianglestuffs_voronoi_infinity, bisection_angle), this_circumcenter.y + lengthdir_y(trianglestuffs_voronoi_infinity, bisection_angle));
+			var voronoi_edge = new trianglestuffs_edge(this_circumcenter, endpoint);
+			
+			array_push(edge_set, voronoi_edge);
+			
+		}
+
+		if (c_is_boundary == true) {
+			
+			var this_edge = this_triangle.edge_list[2];
+			var this_circumcenter = this_triangle.circumcenter;
+			
+			var midpoint_x = (this_edge.vertex_a.x + this_edge.vertex_b.x) * 0.5;
+			var midpoint_y = (this_edge.vertex_a.y + this_edge.vertex_b.y) * 0.5;
+			
+			var bisection_angle = point_direction(this_circumcenter.x, this_circumcenter.y, midpoint_x, midpoint_y);
+			if (inscribed_circumcenter == false) {
+				
+				with (this_edge) {
+					var side_of_line = sign((self.vertex_b.x - self.vertex_a.x) * (this_circumcenter.y - self.vertex_a.y) - (self.vertex_b.y - self.vertex_a.y) * (this_circumcenter.x - self.vertex_a.x));
+					if (side_of_line == -1) {
+						bisection_angle = bisection_angle - 180;
+					}
+				}
+				
+			}
+			
+			var endpoint = new trianglestuffs_vertex(this_circumcenter.x + lengthdir_x(trianglestuffs_voronoi_infinity, bisection_angle), this_circumcenter.y + lengthdir_y(trianglestuffs_voronoi_infinity, bisection_angle));
+			var voronoi_edge = new trianglestuffs_edge(this_circumcenter, endpoint);
+			
+			array_push(edge_set, voronoi_edge);
+			
+		}
+			
+	}
+
+	if (is_undefined(clipping_plane) == false) {
+		
+		var right = clipping_plane.right;
+		var top = clipping_plane.top;
+		var left = clipping_plane.left;
+		var bottom = clipping_plane.bottom;
+		
+		var left_top = new trianglestuffs_vertex(left, top);
+		var right_top = new trianglestuffs_vertex(right, top);
+		var right_bottom = new trianglestuffs_vertex(right, bottom);
+		var left_bottom = new trianglestuffs_vertex(left, bottom);
+		
+		var top_edge = new trianglestuffs_edge(left_top, right_top);
+		var right_edge = new trianglestuffs_edge(right_top, right_bottom);
+		var bottom_edge = new trianglestuffs_edge(left_bottom, right_bottom);
+		var left_edge = new trianglestuffs_edge(left_top, left_bottom);
+		
+		for (var edge_index = array_length(edge_set) - 1; edge_index > -1; edge_index = edge_index - 1) {
+			
+			var this_edge = edge_set[edge_index];
+			var segment_x1 = this_edge.vertex_a.x;
+			var segment_y1 = this_edge.vertex_a.y;
+			var segment_x2 = this_edge.vertex_b.x;
+			var segment_y2 = this_edge.vertex_b.y;
+			
+			var point_a_inside = true;
+			if (segment_x1 < left or segment_x1 > right or segment_y1 < top or segment_y1 > bottom) {
+				point_a_inside = false;
+			}
+			
+			var point_b_inside = true;
+			if (segment_x2 < left or segment_x2 > right or segment_y2 < top or segment_y2 > bottom) {
+				point_b_inside = false;
+			}
+			
+			var intersections = [ 
+				trianglestuffs_get_line_segment_intersect(this_edge, top_edge),
+				trianglestuffs_get_line_segment_intersect(this_edge, right_edge),
+				trianglestuffs_get_line_segment_intersect(this_edge, bottom_edge),
+				trianglestuffs_get_line_segment_intersect(this_edge, left_edge)
+			]
+			array_filter_ext(intersections, function(intersection) {
+				return intersection != trianglestuffs_get_line_segment_intersect.non_intersecting_line;
+			})
+			var number_of_intersections = array_length(intersections);
+			
+			var invalid_intersection = trianglestuffs_get_line_segment_intersect.non_intersecting_line;
+			if (point_a_inside == false and point_b_inside == false and number_of_intersections == 0) {
+				array_delete(edge_set, edge_index, 1);
+				continue;
+			}
+			
+			if (point_a_inside == true and point_b_inside == true) {
+				continue;
+			}
+			
+			if (point_a_inside == true and point_b_inside == false) {
+				edge_set[edge_index] = new trianglestuffs_edge(this_edge.vertex_a, intersections[0]);
+			}
+				
+			if (point_b_inside == true and point_a_inside == false) {
+				edge_set[edge_index] = new trianglestuffs_edge(this_edge.vertex_b, intersections[0]);
+			}				
+			
+			if (point_a_inside == false and point_b_inside == false and number_of_intersections > 0) {
+				edge_set[edge_index] = new trianglestuffs_edge(intersections[0], intersections[1]);
+			}
+				
+		}
+			
+	}
+	
+	return edge_set;
 	
 }

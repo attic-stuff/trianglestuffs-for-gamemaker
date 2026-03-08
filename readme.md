@@ -1,7 +1,7 @@
 # trianglestuffs
 
 ### for gamemakering
-a gamemaker library for triangulating a set of points using the [bowyer-watson](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm) algorithm. suitable for all yer screen shattering, mesh making, and terrain deforming gamemaker needs. make stuff that looks like this:  
+a gamemaker library for triangulating a set of points using the [bowyer-watson](https://en.wikipedia.org/wiki/Bowyer–Watson_algorithm) algorithm. suitable for all yer screen shattering, mesh making, and terrain deforming gamemaker needs. it also provides tools for creating voronoi diagrams 'cause the voronoi diagram of a set of points is the dual graph of a delaunay triangulation! make stuff that looks like this:  
 
 ![example](https://github.com/attic-stuff/trianglestuffs-for-gamemaker/blob/main/example.png)  
 
@@ -96,6 +96,64 @@ var set_of_points = [
 
 ]
 var hull_thing = trianglestuffs_get_convex_hull(set_of_points);
+```
+
+|trianglestuffs_get_voronoi_seeds_flattened(triangulation) |
+|:---------------------------------------------------------|
+|returns a set of positions as a flat array that can be sent to a shader to be used for greedy, naive voronoi shader|
+|**triangulation**: the array of triangles to grab seeds from|  
+
+_example:_  
+```js
+/* CREATE EVENT */
+points_register = shader_get_uniform(voronoi_shader, "seed_points");
+
+var set_of_points = [
+
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+
+]
+
+var mesh_you_up = trianglestuffs_get_triangulation(set_of_points);
+seed_set = trianglestuffs_get_voronoi_seeds_flattened(mesh_you_up);
+
+/* DRAW EVENT */
+shader_set(voronoi_shader);
+shader_set_uniform_f_array(voronoi_shader, seed_set);
+draw_cool_stuff_or_whatever();
+shader_reset();
+```
+
+|trianglestuffs_get_voronoi_edges(triangulation, [clipping_plane]) |
+|:---------------------------------------------------------------|
+|returns a set of edges that create a voronoi diagram of a triangulation. these edges do not close, but can be clipped to a rectangular area. to change how far towards infinity the infinite edges stretch you can change the `trianglestuffs_voronoi_infinity` macro to some cool number you like, or just leave it be.
+|**triangulation**: the triangulation to turn into voronoi cells
+|**[clipping_plane]**: optional array that must contain members `left, top, right, bottom` and form a rectangle clipping plane. edges outside of the plane are yeeted.
+  
+_example:_
+```js
+var set_of_points = [
+
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+    new trianglestuff_vertex(irandom(room_width), irandom(room_height)),
+
+]
+
+var mesh_you_up = trianglestuffs_get_triangulation(set_of_points);
+var clip_plane = {
+    left : 0,
+    top : 0,
+    right : room_width,
+    bottom : room_height
+}
+edge_set = trianglestuffs_get_voronoi_edges(mesh_you_up, clip_plane);
 ```
 
 ### license

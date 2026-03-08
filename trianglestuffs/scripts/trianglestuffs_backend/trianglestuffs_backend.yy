@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"trianglestuffs_backend",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"trianglestuffs_backend",
+  "parent":{
+    "name":"trianglestuffs",
+    "path":"trianglestuffs.yyp",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
